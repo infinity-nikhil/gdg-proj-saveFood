@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
+  "globalEnv": ["DATABASE_URL", "JWT_SECRET", "PORT", "WEB_ORIGIN"],
+  "tasks": {
+    "db:generate": {
+      "cache": false
+    },
+    "dev": {
+      "dependsOn": ["^db:generate"],
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build", "^db:generate"],
+      "outputs": ["dist/**"]
+    },
+    "typecheck": {
+      "dependsOn": ["^db:generate"]
+    }
+  }
+}

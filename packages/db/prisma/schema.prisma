@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  DONOR
+  RECEIVER
+}
+
+enum Category {
+  PRODUCE
+  BAKERY
+  DAIRY
+  PREPARED
+  PANTRY
+  OTHER
+}
+
+enum ListingStatus {
+  AVAILABLE
+  RESERVED
+  COLLECTED
+  EXPIRED
+}
+
+enum ClaimStatus {
+  PENDING
+  COLLECTED
+  CANCELLED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role
+  organization String?
+  city         String
+  createdAt    DateTime  @default(now())
+  listings     Listing[]
+  claims       Claim[]
+}
+
+model Listing {
+  id             String        @id @default(cuid())
+  title          String
+  description    String        @default("")
+  category       Category
+  quantity       Int
+  unit           String
+  weightKg       Float
+  pickupAddress  String
+  city           String
+  availableUntil DateTime
+  status         ListingStatus @default(AVAILABLE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  donorId        String
+  donor          User          @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  claims         Claim[]
+
+  @@index([status, availableUntil])
+  @@index([city])
+  @@index([donorId])
+}
+
+model Claim {
+  id          String      @id @default(cuid())
+  status      ClaimStatus @default(PENDING)
+  pickupCode  String
+  createdAt   DateTime    @default(now())
+  collectedAt DateTime?
+  listingId   String
+  listing     Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User        @relation(fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@index([receiverId])
+  @@index([listingId, status])
+}
